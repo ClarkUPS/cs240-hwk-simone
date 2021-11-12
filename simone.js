@@ -1,8 +1,13 @@
 
+/*instance vairables*/
+var roundNumber; //current round number
+var roundUp; //number of clicks till round number
+var allowInput = false; //to prevent cheeting
+var gameSequence;
+
 
 /*Event listeners*/
 
-async function buttonPress(){
 var boxSelectTint = document.querySelectorAll("div");
 for (let a = 0; a < 4; a++) {
     boxSelectTint[a].addEventListener("mouseover", function () {
@@ -17,23 +22,87 @@ for (let a = 0; a < 4; a++) {
 
     });
 
-    //if clicked #HELP
+    boxSelectTint[a].addEventListener("mousedown", function () {
+       //new listener
+    });
+
+    //roundNumber = current round number
+    boxSelectTint[a].addEventListener("mouseup", async function () {
+        
+        if (allowInput == true) { //TODO
+        
+            let currentInput = boxSelectTint[a].id
+            console.log(currentInput); //remove
+            
+    
+            if (currentInput == gameSequence[roundUp]) {
+                console.log("sucsess")
+
+                let status = document.getElementById("status")
+                
+                roundUp++ //if correct next round!
+
+                status.innerHTML = ("So far so good! " + (roundNumber - roundUp) + " more to go!");
+
+                console.log("round up: " + roundUp) //Remove
+                console.log("out of: " + gameSequence.length) //Remove
+
+                 if (roundUp == gameSequence.length) {
+                     sucsess();
+                } else {
+                    
+                    
+                
+
+                    if (roundUp < roundNumber) { //subsequnce in round
+
+                    //just accept inputs unless wrong
+
+                } else { //new round
+                    roundUp = 0
+                    roundNumber++
+
+                    await nextRound(); //next round update stuff!
+                    console.log("here")
+                    await showPattern(gameSequence.slice(0, roundNumber), 400, 400);
+                }
+                }
+            } else {
+            console.log("thats a fail")
+            await fail()        
+            }
+                
+        }
+    
+    });
+    
 }
-}
+
 
 var playButton = document.querySelector("button");
 playButton.addEventListener("click", async function () {
     //for my sanity
+    
+
     document.body.style.backgroundColor = "black";
+    roundNumber = 0; //need to reset everthing upon starting
     
-    let wS = await welcomeSequence();
+    let wS = await welcomeSequence(); //get and play welcome
+    showPattern(wS, 120, 120)
     
-    let gS = await gameSequence();
+    let gS = await getgameSequence(); //get and save game sequence
+    gameSequence = gS; //save this up top
     
-    playGame(wS , gS);
+
+    await timeout(4000) //4 second timeout before the start of the game
+    console.log(allowInput);
+    //play the first clue and incrase round by one?
+    await showPattern(gameSequence.slice(0, roundNumber + 1), 120, 400);
+    roundNumber++
+    roundUp = 0;
 });
 
-async function welcomeSequence() { //Finish
+async function welcomeSequence() { //api random sequence request #HELP
     
     //return request
     //TEMP
@@ -41,7 +110,7 @@ async function welcomeSequence() { //Finish
 
 }
 
-async function gameSequence() {
+async function getgameSequence() { //api request for random sequnce of n length #HELP
     
     let roundCount = document.querySelector('input[type ="text"]')
     roundCount = roundCount.value
@@ -60,55 +129,22 @@ async function gameSequence() {
 }
 
 
-
-
-//intro sequence stuff up here
-
-
-
-async function playGame(welcomeSequence , colorList) {   //play game and input array of colors to play 
-    //main game for loop
-
-    await showPattern(welcomeSequence, 120, 120) //plays the welcome pattern
-
-    await timeout(3000) //4 second timeout before the start of the game
-
-    let sucsess = true;
-
-    //Main game loop
-    for (let a = 0; a < colorList.length; a++) {
-    
-        await showPattern(colorList.slice(0, a + 1), 120, 400); //need to add so the slice works
-        
-        let pass = await testMemory(colorList.slice(0, a + 1));
-
-        if (pass == false) {
-            sucsess = false
-            await fail();
-            break;//break out of the game for loop
-        }
-       
-        await sucsessUpdateBoard(a, colorList.length);
-        
-    
-    }
-
-    //Sucsess update if the player never failed a single time.
-    if (sucsess == true) { 
-        document.body.style.backgroundColor = "DeepSkyBlue"; //change background
+async function sucsess() {
+    allowInput = false
+    document.body.style.backgroundColor = "DeepSkyBlue"; //change background
 
         let audio = new Audio("sounds/win.mp3");
         audio.play();
 
         let vText = document.getElementById("status");
         vText.innerHTML = ("Yay you win!");
-
-    }
+    
 }
 
 /*Function that plays fail sounds and changes the screen*/
 async function fail() {
     //plays sounds
+    allowInput = false; //do not allow any new inputs
     let audio = new Audio("sounds/wrong.wav");
     audio.play();
     audio = new Audio("sounds/lose.wav")
@@ -118,29 +154,27 @@ async function fail() {
 
     let status = document.getElementById("status")
     status.innerHTML = ("Incorrect! You lose!");
-
-
 }
 
 /*Function that displays a pattern given inputs*/
 async function showPattern(subList, blinkTime, spaceingTime) { 
-    
+    allowInput = false //do not allow to guess during pattern
     let boxSelect = document.querySelectorAll("div"); //should I reuse the select from earlier?
     
     for (let a = 0; a < subList.length; a++) {
-        if (subList[a] == "red") {
+        if (subList[a] == "redSq") {
             boxSelect[0].classList.add("lightred");
             let audio = new Audio("sounds/red.wav");
             audio.play();
             await timeout(blinkTime);
             boxSelect[0].classList.remove("lightred")
-        }else if (subList[a] == "blue") {
+        }else if (subList[a] == "blueSq") {
             boxSelect[1].classList.add("lightblue");
             let audio = new Audio("sounds/blue.wav");
             audio.play();
             await timeout(blinkTime);
             boxSelect[1].classList.remove("lightblue")
-        } else if (subList[a] == "green") {
+        } else if (subList[a] == "greenSq") {
             boxSelect[2].classList.add("lightgreen");
             let audio = new Audio("sounds/green.wav");
             audio.play();
@@ -155,30 +189,14 @@ async function showPattern(subList, blinkTime, spaceingTime) {
         }
         await timeout(spaceingTime); //delay between rounds
     }
+    allowInput = true //allow guess again
 }
+
+
 
 /*Function which tests the player on the correct color order sublist*/
-async function testMemory(sublist) {
-    let correctGuess = true;
-    
-    for (let a = 0; a < sublist.length; a++) {
-        console.log("number of elements " + sublist.length);
-        userGuess = await guess();
 
-        if (userGuess != sublist[a]){
-            correctGuess = false;
-            break;
-        }
-
-       
-
-
-
-    }
-    return correctGuess;
-}
-
-async function sucsessUpdateBoard(round, totalRound){
+async function nextRound(){
        let status = document.getElementById("status")
        status.innerHTML = "Good job! Prepare for next round."
 
@@ -187,15 +205,11 @@ async function sucsessUpdateBoard(round, totalRound){
        
        await timeout(800);
 
-       status.innerHTML = ("Round: " + (round + 1) + " out of " + totalRound);
+    status.innerHTML = ("Round: " + roundNumber + " out of " + gameSequence.length);
+    
+        await timeout(800);
 }
 
-async function guess() { //Make this button based #HELP
-    await buttonPress(); //make this only go when it's the players turn to guess. Some sort of time out
-    let guess = prompt("guess a color");
-    return guess;
-
-}
 
 /*Custom time out function to add delay*/
 async function timeout(time){ //delays by set time
@@ -209,10 +223,13 @@ async function timeout(time){ //delays by set time
 
 //playGame(sampleInput);\
 
-const sampleInput = ["red", "blue"];
+const sampleInput = ["redSq","redSq","greenSq"];
 
-const sampleIntro = ["red", "blue", "green", "yellow"];
+const sampleIntro = ["redSq", "blueSq", "greenSq", "yellowSq"];
 
 //#HELP download/import packages
 //#HELP api stuff
-//
+//stop sound!
+
+
+
