@@ -1,6 +1,4 @@
-//const { default: axios } = require("axios");
-
-//const { default: axios } = require("axios");
+const { default: axios } = require("axios"); //axios call
 
 /*instance vairables*/
 var roundNumber; //current round number
@@ -8,28 +6,16 @@ var roundUp; //number of clicks till round number
 var allowInput = false; //to prevent cheeting
 var gameSequence;
 
-// if (currentInput == "redSq") {
-        //     currentInput = "R"
-
-        // } else if (currentInput == "blueSq") {
-        //     currentInput = "B"
-        // } else if (currentInput == "greenSq") {
-        //     currentInput = "G"
-        // } else {
-        //     currentInput = "Y"
-        // }
-
-
-
 /*Event listeners*/
+
+/*Hover effect for mouse hover*/
 var boxSelectTint = document.querySelectorAll("div");
 for (let a = 0; a < 4; a++) {
     boxSelectTint[a].addEventListener("mouseover", function() {
         boxSelectTint[a].classList.add("hover");
-
-
     });
 
+    //Mouse out unclect to remove effects
     boxSelectTint[a].addEventListener("mouseout", function() {
 
         boxSelectTint[a].classList.remove("hover");
@@ -50,8 +36,9 @@ for (let a = 0; a < 4; a++) {
 
     });
 
+    //Highlight effect for mouse down 
     boxSelectTint[a].addEventListener("mousedown", function() {
-        if (allowInput == true) {
+        if (allowInput == true) {//allows inputs to go through or not. (stops cheating/misinputs)
             let boxSelect = document.querySelectorAll("div");
 
             let currentInput = boxSelectTint[a].id
@@ -71,19 +58,16 @@ for (let a = 0; a < 4; a++) {
 
     });
 
-    //roundNumber = current round number
+    /*Color button listoners which runs the entire game*/
     boxSelectTint[a].addEventListener("mouseup", async function() {
 
-        if (allowInput == true) { //TODO
+        if (allowInput == true) { //allows inputs to go through or not. (stops cheating/misinputs)
 
             let boxSelect = document.querySelectorAll("div");
 
             let currentInput = boxSelectTint[a].id
 
 
-
-
-            console.log(currentInput); //remove
 
             
 
@@ -149,35 +133,32 @@ for (let a = 0; a < 4; a++) {
 
 }
 
-
+/* Start button which starts the game*/
 var playButton = document.querySelector("button");
 playButton.addEventListener("click", async function() {
     //for my sanity
-
 
     document.body.style.backgroundColor = "black";
     roundNumber = 0; //need to reset everthing upon starting
 
     let wS = await welcomeSequence(); //get and play welcome
-    console.log("the returned sequence: ")
-    console.log(wS)
     showPattern(wS, 120, 120)
 
     let gS = await getgameSequence(); //get and save game sequence
     gameSequence = gS; //save this up top
 
-
     await timeout(4000) //4 second timeout before the start of the game
-    console.log(allowInput);
-    //play the first clue and incrase round by one?
+    
+
+    //play the first clue and incrase round by one
     await showPattern(gameSequence.slice(0, roundNumber + 1), 120, 400);
     roundNumber++
-    roundUp = 0;
+    roundUp = 0; //make sure this begins reset
 });
 
-async function welcomeSequence() { //api random sequence request #HELP
-
-
+/*get the welcome sequene from api and process sequence*/
+async function welcomeSequence() { 
+//try and make the request for the welcome sequence
     try {
         console.log("first")
         let request = await axios.get("http://cs.pugetsound.edu/~dchiu/cs240/api/simone/?cmd=start")
@@ -198,32 +179,29 @@ async function welcomeSequence() { //api random sequence request #HELP
                 }
 
         }
-        console.log("new")
-        console.log(request);
+        
+        return request; //pass back the finished welcome array
 
-        return request;
-    } catch (error) {
+    } catch (error) { //catch error
         console.log(error);
     }
 
-
-    
-
-    
-   
-
 }
 
-async function getgameSequence() { //api request for random sequnce of n length #HELP
-
+/* Try to get the random game sequence from api*/
+async function getgameSequence() { //api request for random sequnce of n length. Default length is 10
     let roundCount = document.querySelector('input[type ="text"]')
     roundCount = roundCount.value
 
     roundCount = Math.floor(roundCount); //don't allow for partial numbers
 
-    if (roundCount <= 0) { //make sure no negative numbers get though
+    if (isNaN(roundCount)) { //make sure non number inputs are not taken into account
+        roundCount = 10;
+    } else if (roundCount <= 0) { //make sure no negative numbers get though
         roundCount = 10
     }
+
+    //get random sequence based of the input length n.
 
     try {
         let link = ("https://cs.pugetsound.edu/~dchiu/cs240/api/simone/?cmd=getSolution&rounds=" + roundCount)
@@ -246,23 +224,17 @@ async function getgameSequence() { //api request for random sequnce of n length 
 
         }
 
+        return request; //return processed sequence
 
-        console.log("current test sequence: ");
-        console.log(request);
-        return request;
-    } catch (error) {
+    } catch (error) { //catch error
         console.log(error)
     }
-    
-    
-
-  
 
 }
 
-
+/*sucsess event changes*/
 async function sucsess() {
-    allowInput = false
+    allowInput = false //no more color button inputs after game finished 
     document.body.style.backgroundColor = "DeepSkyBlue"; //change background
 
     let audio = new Audio("sounds/win.mp3");
@@ -275,11 +247,12 @@ async function sucsess() {
 
 /*Function that plays fail sounds and changes the screen*/
 async function fail() {
-    //plays sounds
-    allowInput = false; //do not allow any new inputs
+    allowInput = false; //no more color button inputs after game finished 
+   
     let audio = new Audio("sounds/wrong.wav");
     audio.play();
-    audio = new Audio("sounds/lose.wav")
+
+    audio = new Audio("sounds/lose.wav");
     audio.play();
 
     document.body.style.backgroundColor = "hotpink"; //change background
@@ -326,20 +299,23 @@ async function showPattern(subList, blinkTime, spaceingTime) {
 
 
 
-/*Function which tests the player on the correct color order sublist*/
-
+/*played in between rounds should a player input the correct sequence in a round */
 async function nextRound() {
+    allowInput = false; //don't want inputs now
+    
     let status = document.getElementById("status")
     status.innerHTML = "Good job! Prepare for next round."
 
     let audio = new Audio("sounds/nextRound.wav")
     audio.play();
 
-    await timeout(800);
+    await timeout(800); //delay for status start
 
     status.innerHTML = ("Round: " + roundNumber + " out of " + gameSequence.length);
 
-    await timeout(800);
+    await timeout(800); //delay for status end
+
+    allowInput = true; //inputs now allowed
 }
 
 
@@ -351,14 +327,3 @@ async function timeout(time) { //delays by set time
         }, time) //takes custom time now
     );
 }
-
-
-//playGame(sampleInput);\
-
-const sampleInput = ["redSq", "greenSq", "yellowSq"];
-
-//const sampleIntro = ["R", "B", "G", "Y"];
-
-//#HELP download/import packages
-//#HELP api stuff
-//stop sound!
