@@ -67,17 +67,12 @@ for (let a = 0; a < 4; a++) {
 
             let currentInput = boxSelectTint[a].id
 
-
-
-            
-
             if (currentInput == gameSequence[roundUp]) {
 
                 if (currentInput == "redSq") {
                     boxSelect[0].classList.remove("lightred");
                     let audio = new Audio("sounds/red.wav");
                     audio.play();
-                    console.log("here")
                 } else if (currentInput == "blueSq") {
                     boxSelect[1].classList.remove("lightblue");
                     let audio = new Audio("sounds/blue.wav");
@@ -99,8 +94,7 @@ for (let a = 0; a < 4; a++) {
 
                 status.innerHTML = ("So far so good! " + (roundNumber - roundUp) + " more to go!");
 
-                console.log("round up: " + roundUp) //Remove
-                console.log("out of: " + gameSequence.length) //Remove
+            
 
                 if (roundUp == gameSequence.length) {
                     sucsess();
@@ -118,12 +112,12 @@ for (let a = 0; a < 4; a++) {
                         roundNumber++
 
                         await nextRound(); //next round update stuff!
-                        console.log("here")
+                       
                         await showPattern(gameSequence.slice(0, roundNumber), 400, 400);
                     }
                 }
             } else {
-                console.log("thats a fail")
+               
                 await fail()
             }
 
@@ -160,10 +154,10 @@ playButton.addEventListener("click", async function() {
 async function welcomeSequence() { 
 //try and make the request for the welcome sequence
     try {
-        console.log("first")
+      
         let request = await axios.get("http://cs.pugetsound.edu/~dchiu/cs240/api/simone/?cmd=start")
         request = request.data.sequence;
-        console.log(request);
+    
 
         //convert to readable sequence.
         for (let a = 0; a < request.length; a++) {
@@ -206,7 +200,7 @@ async function getgameSequence() { //api request for random sequnce of n length.
     try {
         let link = ("https://cs.pugetsound.edu/~dchiu/cs240/api/simone/?cmd=getSolution&rounds=" + roundCount)
         let request = await axios.get(link);
-        console.log(request);
+     
         request = request.data.key;
 
         //convert to readable sequence.
